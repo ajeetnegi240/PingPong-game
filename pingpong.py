@@ -1,4 +1,4 @@
-import pygame,sys
+import pygame,sys,playsound
 from pygame.locals import *
 
 
@@ -29,6 +29,8 @@ player_score=0
 margin=50
 fps=60
 winner=0
+speed_increase=0
+x=1
 
 
 def draw_board(bgcolor,screen_width,margin):
@@ -74,6 +76,7 @@ class ball:
         self.reset(x,y)
         
     def move(self):
+        
         #detecting collision
         #checking collision with top margin 
         if self.rect.top<margin:
@@ -83,8 +86,16 @@ class ball:
             self.speed_y*=-1
             
         #checking collision with paddles
-        if self.rect.colliderect(player_paddle) or self.rect.colliderect(cpu_paddle):
+        if self.rect.colliderect(player_paddle): 
             self.speed_x*=-1
+            # playsound.playsound('ballsound.mp3.wav')
+            
+        if self.rect.colliderect(cpu_paddle):
+            self.speed_x*=-1
+            # playsound.playsound('ballsound.mp3.wav')
+            global player_score
+            player_score+=1
+            
         #checking for out bounds:
         if self.rect.left <0:
             self.winner=1
@@ -111,7 +122,7 @@ class ball:
         self.winner=0
      
      
-     
+color=(60, 0, 0)     
          
 #create paddle
 player_paddle =paddle(screen_width-40,screen_height//2)         
@@ -122,47 +133,76 @@ pong=ball(screen_width-60,screen_height//2+50)
  
     
    
-
-while True:
-    clock.tick(60)
+def gameloop():
+    global live_ball
+    global cpu_score
+    global player_score
+    global margin
+    global fps
+    global winner
+    global speed_increase
+    global color
     
-    draw_board(bgcolor,screen_width,margin)
-    draw_text('CPU:'+str(cpu_score),font,white,20,15)
-    draw_text('Player:'+str(player_score),font,white,screen_width-100,15)
-    
-    
-    #drawing paddles
-    player_paddle.draw()
-    cpu_paddle.draw()
-    
-    
-    if live_ball==True:
-        winner =pong.move()
-        if winner==0:
-            player_paddle.move()
-            cpu_paddle.ai()
-            #drawing pong
-            pong.draw()
-        else:
-            live_ball=False
-            if winner ==1:
-                player_score+=1
-            elif winner==-1:
-                cpu_score+=1
-                
-    
-    
-    for event in pygame.event.get():
-        if event.type==QUIT:
-            pygame.quit()
-            sys.exit()
-        if event.type==pygame.MOUSEBUTTONDOWN and live_ball==False:
-            live_ball=True
-            pong.reset(screen_width-60,screen_height//2+50)
-                
     pygame.display.update()
+    while True:
+        
+        draw_board(bgcolor,screen_width,margin)
+        # draw_text('CPU:'+str(cpu_score),font,white,20,15)
+        #instructions for player-
+        if player_score==0:
+            draw_text('CLICK ANYWHERE TO START ',font,(23,234,125),100,screen_height//2-50)
+        draw_text('Player:'+str(player_score),font,white,screen_width-100,15)
+        
+        
+        #drawing paddles
+        player_paddle.draw()
+        cpu_paddle.draw()
+        
+        
+        if live_ball==True:
+            speed_increase+=0.5
+            winner=pong.move()
+            if winner==0:
+                player_paddle.move()
+                cpu_paddle.ai()
+                #drawing pong
+                pong.draw()
+            else:
+                live_ball=False
+                draw_board(color,screen_width,margin)
+                draw_text('Your score:'+str(player_score),font,white,200,200)
+                draw_text('To Restart The Game  ',font,white,100,270)
+                draw_text(' press any key of mouse',font,white,100,300)
+                player_score=0
+                    
+                    
+                for ev in pygame.event.get():
+                    if ev.type==QUIT:
+                            pygame.quit()
+                            sys.exit()
+                    if ev.type==pygame.KEYDOWN:
+                        if event.key==pygame.K_RETURN:
+                            gameloop()
+                pygame.display.update()
+               
+        for event in pygame.event.get():
+            if event.type==QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type==pygame.MOUSEBUTTONDOWN and live_ball==False:
+                live_ball=True
+                player_score=0
+                pong.reset(screen_width-60,screen_height//2+50)
+                
+            
+                    
+        pygame.display.update()
+        clock.tick(60)
+      
+        
 
 
+gameloop()
             
 
  
